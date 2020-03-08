@@ -35,7 +35,7 @@ hyp_init = struct('mean', [], 'cov', zeros(1,length(X_data(1,:))+1), 'lik', -1);
 % inducing points
 % require_num = 1.5*log10(length(X_data(:,1)))^(length(X_data(1,:)));
 % 7.0826e+05 > 7016
-require_num = 5000;
+require_num = 5000; % 3000: predict 7-9 sec; 5000: predict 30 sec
 step_length = floor(length(X_data(:,1))/require_num);
 xu = X_data(1:step_length:end,:);
 cov = {'apxSparse', covfunc, xu};
@@ -70,22 +70,25 @@ elseif Mode_flag == 1 % only predict
     %% Predict
     
     % load trained parameters
-    load("")
+    load("trained GPs\07-Mar-2020-model.mat")
     
     for xx = [0.25 0.75]
         for yy = [-0.5 0.0 0.5]
             for vol = [0.3 0.6]
             
             % test data
-            % xx = 0.1; yy = 0.8; % normalized loading center
-            % test data
+%             xx = 0.4; yy = 0.5; % normalized loading center
+%             vol = 0.8;
+            
             rank = 4; pca_mean_vec = PCA_pc([xx*170,yy*80],H0,rank,U);
             pca_mean_vec = ones(9400,1)*[pca_mean_vec(1:rank)/800, pca_mean_vec(rank+1)/40];
             X_test = [xx*ones(9400,1), yy*zeros(9400,1), (X(:)-xx*170)/170,...
                 (Y(:)-yy*80)/80, vol*ones(9400,1), pca_mean_vec];
             
+            tic;
             [ymu,ys2] = gp(hyp_sparseGP, inff, meanfunc, cov, likfunc,...
                 X_data, Y_data, X_test);
+            Time_of_prediction = toc
             
             % reshape the result
             m = 94; n = 100;

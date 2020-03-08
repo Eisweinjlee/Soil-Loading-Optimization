@@ -37,6 +37,7 @@ load("dataset\"+data_date+"loading_center.mat")
 load("dataset\"+data_date+"loading_volume.mat")
 % H_data: full_dataset
 load("dataset\"+data_date+"full_dataset.mat")
+number = length(H_data(1,1,:));
 
 % shape before loading: PCs & mean value
 load("dataset\"+data_date+"pca_mean.mat")
@@ -73,6 +74,8 @@ elseif nominal_model_flag == 1
 end
 
 for i = 1:number % start evaluation
+disp("Evaluation process "+i+"/"+number)
+    
 % for i = 185
 
 % normalized center: Xc=[0,1], Yc=[-1,1]
