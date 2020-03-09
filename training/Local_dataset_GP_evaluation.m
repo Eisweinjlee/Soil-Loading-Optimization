@@ -90,7 +90,7 @@ pca_mean_vec = pca_mean(i,:);
 pca_mean_vec = ones(9400,1)*[pca_mean_vec(1:4)/800, pca_mean_vec(4+1)/40];
 
 % test data
-X_test = [Xc_nor*ones(9400,1), Yc_nor*zeros(9400,1), ...
+X_test = [Xc_nor*ones(9400,1), Yc_nor*ones(9400,1), ...
     (X(:)-Xc(i))/170, (Y(:)-Yc(i))/80, Vol_data(i)*ones(9400,1), pca_mean_vec];
 
 % prediction
