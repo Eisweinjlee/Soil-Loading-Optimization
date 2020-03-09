@@ -6,10 +6,10 @@
 close all
 clear
 
-Mode_flag = 0; % 0: training & predict, 1: only predict
+Mode_flag = 1; % 0: training & predict, 1: only predict
 
 %% load the dataset
-load('dataset\07-Mar-2020-local_dataset.mat')
+load('dataset\09-Mar-2020-local_dataset.mat')
 load('data\pca data\U_matrix_PCA.mat')
 % X_data, Y_data, X, Y, U_PCA
 
@@ -35,7 +35,10 @@ hyp_init = struct('mean', [], 'cov', zeros(1,length(X_data(1,:))+1), 'lik', -1);
 % inducing points
 % require_num = 1.5*log10(length(X_data(:,1)))^(length(X_data(1,:)));
 % 7.0826e+05 > 7016
-require_num = 5000; % 3000: predict 7-9 sec; 5000: predict 30 sec
+require_num = 800; 
+% 800: predict 0.8 sec; 1500: predict 2 sec; 
+% 3000: predict 7-9 sec; 5000: predict 30 sec;
+
 step_length = floor(length(X_data(:,1))/require_num);
 xu = X_data(1:step_length:end,:);
 cov = {'apxSparse', covfunc, xu};
@@ -50,7 +53,7 @@ if Mode_flag == 0 % training & predict
     Time_of_SparseGP = toc
     
     save_doc = "trained GPs\";
-    save(save_doc+date+"-model", 'hyp_sparseGP')
+    save(save_doc+date+"-model2", 'hyp_sparseGP')
     disp("Trained model is saved.")
     
     %% Predict at X_test
@@ -70,13 +73,13 @@ elseif Mode_flag == 1 % only predict
     %% Predict
     
     % load trained parameters
-    load("trained GPs\07-Mar-2020-model.mat")
+    load("trained GPs\09-Mar-2020-model.mat")
     
     for xx = [0.25 0.75]
         for yy = [-0.5 0.0 0.5]
             for vol = [0.3 0.6]
             
-            % test data
+%             % test data
 %             xx = 0.4; yy = 0.5; % normalized loading center
 %             vol = 0.8;
             

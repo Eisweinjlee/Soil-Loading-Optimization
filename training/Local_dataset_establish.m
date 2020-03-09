@@ -13,11 +13,11 @@ docName2 = "data\data2_volumes\";
 docName3 = "data\data3_beforeLoading\";
 save_doc = "dataset\";
 
-rank = 4; % PCA rank (enough to use r = 4 in our project)
 nominal_model_flag = 1; % 0: 2D Gaussian pdf, 1: Unit-symmetric Gaussian pdf
+rank = 4; % PCA for h_{i-1} (enough to use r = 4 in our project)
 
 %% 1. Loading the data (changed for different data)
-load(docName1 + "00.mat",'dep') % load the empty vessel
+load(docName1 + "00.mat",'dep') % load the empty vessel data
 H0 = dep; [m,n] = size(dep);
 H_data = zeros(m,n,61);
 
@@ -238,15 +238,16 @@ for i = 1:10
     number = number + 3;
 end % 11 ~ 103
 
-filename = date + "-PCs.mat";
-save(save_doc + filename,'pca_mean')
+save(save_doc + date + "-pca_mean","pca_mean") 
+% save the pca_mean for Local_dataset_GP_evaluation.m
 
 %% 3.1 The transition update calculation
 number = 0;
 for i = 1:97
     number = number + 1;
     H_data(:,:,i) = H_data(:,:,i) - H0;
-end
+end % docName1 & docName2
+
 number = 97;
 for i = 1:6
     H_data(:,:,number + 2) = H_data(:,:,number + 2) - H_data(:,:,number + 1);
@@ -289,7 +290,7 @@ for i = 1:10
     H_data(:,:,number + 1) = H_data(:,:,number + 1) - H02;
     number = number + 3;
 end % 11 ~ 103
-
+% docName3
 
 %% 3.2 The error model
 
@@ -315,6 +316,7 @@ elseif nominal_model_flag == 1
     % for unit_sym_input_2d
     lambdaX = 1.209827074460249e+03; lambdaY = 1.857790332589524e+03;
     kV = 3.9410; Xmove = 0.0253; Ymove = 0.1487; alpha = 0.6147;
+    Sigma = [lambdaX,0;0,lambdaY];
     for i = 1:number
         delta_H = unit_sym_input_2d(X,Y,dep_center(i,:)-[Xmove,Ymove],kV*Vol_data(i)*Vol,Sigma,alpha);
         H_error(:,:,i) = H_data(:,:,i) - delta_H;   % error data
@@ -459,10 +461,10 @@ for k = 1:number
     X_data = [X_data; Xc_nor, Yc_nor, Xre, Yre, Vol_nor, pca_mean_nor];
 end
 
-disp("The input data is N = " + length(X_data(:,1)) + " with D = " + length(X_data(1,:)))
+disp("The input data N = " + length(X_data(:,1)) + ", D = " + length(X_data(1,:)))
 
 % X_test
-pca_mean_vec = PCA_pc([85,0],H0,4,U);
+pca_mean_vec = PCA_pc([85,0],H0,rank,U);
 pca_mean_vec = ones(9400,1)*[pca_mean_vec(1:rank)/800, pca_mean_vec(rank+1)/40];
 X_test = [0.5*ones(9400,1), zeros(9400,1), (X(:)-85)/170, Y(:)/80,...
     1.0*ones(9400,1),pca_mean_vec];
@@ -472,5 +474,3 @@ H0 = initializeH_2d(X,xc,xr,thr,thf);
 filename = date + "-local_dataset.mat";
 save(save_doc + filename,'X_data','Y_data', 'X', 'Y', 'H0')
 disp("The data is saved as "+ filename)
-
-save(save_doc + date + "-pca_mean","pca_mean") % save the pca_mean for Local_dataset_GP_evaluation.m

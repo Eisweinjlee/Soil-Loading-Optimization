@@ -10,12 +10,13 @@ nominal_model_flag = 1; % 0: 2D Gaussian pdf, 1: Unit-symmetric Gaussian pdf
 
 %% 1. Load the model and specify parameters
 
-data_date = "07-Mar-2020-";
+data_date = "09-Mar-2020-";
 
 % load the dataset: X_data, Y_data, X, Y
 load("dataset\"+data_date+"local_dataset.mat")
 % load trained parameters: hyp_sparseGP
-load("trained GPs\"+data_date+"model.mat")
+load("trained GPs\"+data_date+"model.mat") % 800 virtual data points
+    % load("trained GPs\"+data_date+"model.mat")
 
 % Specify the mean, cov, likelihood
 meanfunc = [];                      % empty: don't use a mean function
@@ -70,12 +71,15 @@ if nominal_model_flag == 0
     Sigma = [lambdaX,0;0,lambdaY];
 elseif nominal_model_flag == 1
     lambdaX = 1.209827074460249e+03; lambdaY = 1.857790332589524e+03;
-    kV = 3.9410; Xmove = 0.0253; Ymove = 0.1487; alpha = 0.6147;   
+    kV = 3.9410; Xmove = 0.0253; Ymove = 0.1487; alpha = 0.6147;
+    Sigma = [lambdaX,0;0,lambdaY];
 end
 
 for i = 1:number % start evaluation
-disp("Evaluation process "+i+"/"+number)
-    
+if mod(i,5) == 0
+    disp("Evaluation process "+i+"/"+number)
+end
+
 % for i = 185
 
 % normalized center: Xc=[0,1], Yc=[-1,1]
