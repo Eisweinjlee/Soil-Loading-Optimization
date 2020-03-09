@@ -38,7 +38,9 @@ load("data\pca data\U_matrix_PCA.mat") % load U matrix for PCA compute
 % inputs: each loaing has (Xc,Yc,Vol)
 % u = [xc1,yc1,vol1, xc2,yc2,vol2, xc3,yc3,vol3];
 % u0 = [85,0,1, 85,0,1, 85,0,1];
-u0 = [42.5,0,1, 85,0,1, 3*42.5,0,1];
+% u0 = [42.5,0,1, 85,0,1, 3*42.5,0,1];
+% u0 = [42.5,0,1, 85,0,1, 3*42.5,0,1];
+u0 = [42.5000000000000,-6.86869124880580,1,87.5499824485590,-0.674760706942117,1,121.549997376126,2.04452083448939,0.999999966438559];
 
 % boundaries:
 umin = [42.5,-40,0, 42.5,-40,0, 42.5,-40,0];
@@ -49,9 +51,13 @@ A = []; b = []; Aeq = []; beq = [];
 
 %% 3. Optimization
 tic
-options = optimoptions(@fmincon,'MaxFunctionEvaluations',6000,'Display','iter','Algorithm','sqp');
-u_opt = fmincon(@(u)objfun_3times_loading(u,H0,R,Nominal_model,X_data,Y_data,X,Y,hyp_sparseGP,U),...
-    u0,A,b,Aeq,beq,umin,umax,[],options);
+% options = optimoptions(@fmincon,'MaxFunctionEvaluations',6000,'Display','iter','Algorithm','sqp');
+% u_opt = fmincon(@(u)objfun_3times_loading(u,H0,R,Nominal_model,X_data,Y_data,X,Y,hyp_sparseGP,U),...
+%     u0,A,b,Aeq,beq,umin,umax,[],options);
+
+options = optimset('Display','iter','PlotFcns',@optimplotfval);
+u_opt = fminsearch(@(u)objfun_3times_search(u,H0,R,Nominal_model,X_data,Y_data,X,Y,hyp_sparseGP,U),...
+    u0,options);
 toc
 
 %% 4. Show the result
@@ -64,4 +70,9 @@ for i = 1:3
 end
 figure
 mesh(H_after)
+figure
+subplot(1,2,1); mesh(H_after);zlim([-50 30]);
+subplot(1,2,2); mesh(R);zlim([-50 30]);
 
+% 5. save
+% save("optimization results\"+date+"-u3_opt",'u_opt')
