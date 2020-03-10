@@ -1,8 +1,9 @@
-function J = objfun_3times_search(u,H0,R,Nominal_model,X_data,Y_data,X,Y,hyp_sparseGP,U)
+function J = objfun_search(u,H0,R,Nominal_model,X_data,Y_data,X,Y,hyp_sparseGP,U)
 
 H_last = H0;
+times = length(u)/3;
 
-for i = 1:3
+for i = 1:times
     if u(3*i-2) < 43
         u(3*i-2) = 43;
     elseif u(3*i-2) > 127
@@ -23,7 +24,7 @@ for i = 1:3
 end
 
 % Loading soil to the end
-for i = 1:3
+for i = 1:times
     H_after = gp_predict(H_last,u(3*i-2),u(3*i-1),u(3*i),U,X,Y,...
         X_data,Y_data,hyp_sparseGP,Nominal_model);
     H_last = H_after;
