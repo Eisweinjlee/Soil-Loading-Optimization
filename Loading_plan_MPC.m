@@ -3,11 +3,12 @@
 % Author: Li, Yang
 % Date: Apr 7th, 2020
 
-% close all
-% clear
+close all
+clear
 
 nominal_model_flag = 1; 
 % 0: 2D Gaussian pdf, 1: Unit-symmetric Gaussian pdf
+diffusion_level = 150;
 
 %% 1. Parameters, dataset and model
 run("data\excavator_data.m") % load parameters
@@ -36,7 +37,8 @@ load("data\pca data\U_matrix_PCA.mat") % load U matrix for PCA compute
 
 %% 2. Optimization parameters
 % 4 loading times MPC scheme
-u_experience = [53.5493935897970,-3.87599608955972,0.831205387328661,67.1450471157161,8.72476005996204,0.735134898326868,85.8510758456105,-3.62645944766534,0.770890789760168,126.670983679879,9.36170179718247,0.813616886168327];
+u_exp = [53.5493935897970,-3.87599608955972,0.831205387328661,67.1450471157161,8.72476005996204,0.735134898326868,85.8510758456105,-3.62645944766534,0.770890789760168,126.670983679879,9.36170179718247,0.813616886168327];
+% u_exp = [43,0,0.5, 60,0,0.8, 80,0,0.8, 125,0,0.9];
 
 time_of_opt = zeros(4,1);
 H_last = H0;
@@ -44,7 +46,7 @@ H_last = H0;
 u_mpc = [];
 for i = 1:4 % MPC scheme for 4 loadings
     % initial input u0
-    u0 = u_experience(3*i-2 : 12);
+    u0 = u_exp(3*i-2 : 12);
     
     % constraints;
     umin = []; umax = [];
@@ -82,33 +84,50 @@ for i = 1:4 % MPC scheme for 4 loadings
     u_mpc = [u_mpc, u];
     H_last = gp_predict(H_last,u(1),u(2),u(3),U,X,Y,X_data,Y_data,hyp_sparseGP,Nominal_model);
     
+    figure
+    mesh(X,Y,H_last);xlim([0 170]);ylim([-80 80]);zlim([-50 30]);
+    title("before diff");
+    
+    % add the disturbance to the state
+    H_last = diffusion_effect(H_last, diffusion_level);
+    figure
+    mesh(X,Y,H_last);xlim([0 170]);ylim([-80 80]);zlim([-50 30]);
+    title("after diff");
+    
 end
     
 
 %% 5. Show the result
 % Loading soil to the end
 H_last = H0;
-loading_times = length(u_experience)/3;
+loading_times = length(u_exp)/3;
 if y_iszero == true
     for i = 1:loading_times
     H_after = gp_predict(H_last,u_mpc(2*i-1),0,u_mpc(2*i),U,X,Y,...
         X_data,Y_data,hyp_sparseGP, Nominal_model);
-    H_last = H_after;
+    H_last = diffusion_effect(H_after, diffusion_level);
+%     H_last = H_after;
     end
     
 elseif y_iszero == false
     for i = 1:loading_times
         H_after = gp_predict(H_last,u_mpc(3*i-2),u_mpc(3*i-1),u_mpc(3*i),U,X,Y,...
             X_data,Y_data,hyp_sparseGP, Nominal_model);
-        H_last = H_after;
+        
+        H_last = diffusion_effect(H_after, diffusion_level);
+%         H_last = H_after; % without diffusion
+        
+        figure; mesh(X,Y,H_after);xlim([0 170]);ylim([-80 80]);zlim([-50 30]);
     end   
 end
 
 figure
 mesh(X,Y,H_after);xlim([0 170]);ylim([-80 80]);zlim([-50 30]);
 figure
-subplot(1,2,1); mesh(X,Y,H_after);xlim([0 170]);ylim([-80 80]);zlim([-50 30]);
+subplot(1,2,1); mesh(X,Y,H_last);xlim([0 170]);ylim([-80 80]);zlim([-50 30]);
 subplot(1,2,2); mesh(X,Y,R);xlim([0 170]);ylim([-80 80]);zlim([-50 30]);
 
+sqrt(immse(H_last,R)) % the evaluation
+
 %% 5. save
-% save("optimization results\"+date+"-u4_opt",'u_opt')
+% save("optimization results\"+date+"-u4_opt",'u_mpc')
